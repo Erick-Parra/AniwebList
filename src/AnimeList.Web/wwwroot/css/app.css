@@ -292,6 +292,21 @@ img { max-width: 100%; display: block; }
 .detail-skeleton__cover { aspect-ratio: 2/3; border-radius: var(--radius-md); }
 .detail-skeleton__info { padding-top: 8px; }
 
+/* ── Blazor loading & error UI ───────────────────────────────── */
+.loading-progress { display: none; }
+
+#blazor-error-ui {
+  display: none;
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 9999;
+  background: rgba(239,68,68,.08);
+  border-top: 1px solid var(--color-danger);
+  color: var(--color-danger);
+  padding: 10px 16px;
+  font-size: var(--text-sm);
+}
+#blazor-error-ui .reload { color: var(--color-danger); font-weight: 600; margin: 0 8px; }
+#blazor-error-ui .dismiss { cursor: pointer; float: right; }
+
 /* ── Search bar ──────────────────────────────────────────────── */
 .search-bar { display: flex; gap: 10px; margin-bottom: 28px; }
 .search-bar .form-input { flex: 1; }
