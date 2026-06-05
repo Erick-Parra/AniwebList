@@ -1,4 +1,5 @@
 using AnimeList.Core.Entities;
+using AnimeList.Infrastructure;
 using AnimeList.Infrastructure.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -12,6 +13,7 @@ builder.Services.AddIdentityCore<ApplicationUser>()
     .AddEntityFrameworkStores<AppDbContext>()
     .AddDefaultTokenProviders();
 
+builder.Services.AddInfrastructure();
 builder.Services.AddControllers();
 
 var app = builder.Build();
