@@ -1,0 +1,38 @@
+@using AnimeList.Web.Models
+
+<div class="anime-card" @onclick="OnClick">
+    <div class="anime-card__cover">
+        @if (!string.IsNullOrEmpty(Anime.ImageUrl))
+        {
+            <img src="@Anime.ImageUrl" alt="@Anime.Title" loading="lazy" />
+        }
+        else
+        {
+            <div class="anime-card__cover-empty">🎬</div>
+        }
+        <div class="anime-card__badge">
+            <StatusBadge Status="@Anime.WatchStatus" />
+        </div>
+    </div>
+    <div class="anime-card__info">
+        <div class="anime-card__title">@Anime.Title</div>
+        <div class="anime-card__meta">
+            @if (Anime.Score.HasValue)
+            {
+                <span>⭐ @Anime.Score</span>
+                <span>·</span>
+            }
+            @if (Anime.IsFavorite)
+            {
+                <span title="Favorito">❤️</span>
+                <span>·</span>
+            }
+            <span>@Anime.EpisodesWatched ep.</span>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public AnimeEntryResponse Anime { get; set; } = null!;
+    [Parameter] public EventCallback OnClick { get; set; }
+}

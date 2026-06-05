@@ -1,0 +1,101 @@
+@page "/login"
+@attribute [AllowAnonymous]
+
+<PageTitle>AniwebList — Entrar</PageTitle>
+
+<div class="auth-page">
+    <div class="auth-card">
+
+        <div class="auth-brand">
+            <h1>AniwebList</h1>
+            <p>Tu lista de animes personal</p>
+        </div>
+
+        <div class="auth-tabs">
+            <div class="auth-tab @(isLogin ? "auth-tab--active" : "")" @onclick="() => SetTab(true)">Iniciar sesión</div>
+            <div class="auth-tab @(!isLogin ? "auth-tab--active" : "")" @onclick="() => SetTab(false)">Registrarse</div>
+        </div>
+
+        @if (error is not null)
+        {
+            <div class="auth-error">@error</div>
+        }
+
+        @if (isLogin)
+        {
+            <div class="auth-form">
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input class="form-input" type="email" @bind="email" placeholder="tu@email.com" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Contraseña</label>
+                    <input class="form-input" type="password" @bind="password" placeholder="••••••••"
+                           @onkeydown="OnKeyDown" />
+                </div>
+                <button class="btn btn-primary" @onclick="LoginAsync" disabled="@loading">
+                    @(loading ? "Entrando..." : "Iniciar sesión")
+                </button>
+            </div>
+        }
+        else
+        {
+            <div class="auth-form">
+                <div class="form-group">
+                    <label class="form-label">Nombre de usuario</label>
+                    <input class="form-input" type="text" @bind="userName" placeholder="ej: erick" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input class="form-input" type="email" @bind="email" placeholder="tu@email.com" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Contraseña</label>
+                    <input class="form-input" type="password" @bind="password" placeholder="Mín. 6 caracteres"
+                           @onkeydown="OnKeyDown" />
+                </div>
+                <button class="btn btn-primary" @onclick="RegisterAsync" disabled="@loading">
+                    @(loading ? "Registrando..." : "Crear cuenta")
+                </button>
+            </div>
+        }
+
+    </div>
+</div>
+
+@inject AuthService AuthSvc
+@inject NavigationManager Nav
+
+@code {
+    bool isLogin = true;
+    bool loading;
+    string? error;
+    string email = "", password = "", userName = "";
+
+    void SetTab(bool login) { isLogin = login; error = null; }
+
+    async Task LoginAsync()
+    {
+        loading = true; error = null;
+        error = await AuthSvc.LoginAsync(email, password);
+        loading = false;
+        if (error is null) Nav.NavigateTo("/mi-lista");
+    }
+
+    async Task RegisterAsync()
+    {
+        loading = true; error = null;
+        error = await AuthSvc.RegisterAsync(userName, email, password);
+        loading = false;
+        if (error is null) Nav.NavigateTo("/mi-lista");
+    }
+
+    async Task OnKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            if (isLogin) await LoginAsync();
+            else await RegisterAsync();
+        }
+    }
+}

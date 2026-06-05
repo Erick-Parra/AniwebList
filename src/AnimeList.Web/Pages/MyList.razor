@@ -1,0 +1,99 @@
+@page "/"
+@page "/mi-lista"
+@attribute [Authorize]
+
+<PageTitle>Mi Lista — AniwebList</PageTitle>
+
+<div class="page-header">
+    <h1 class="page-title">Mi Lista</h1>
+</div>
+
+<!-- Filtros -->
+<div class="filter-chips">
+    <button class="filter-chip @(activeFilter == null ? "filter-chip--active" : "")"
+            @onclick="() => SetFilter(null)">Todos</button>
+    @foreach (var status in Enum.GetValues<WatchStatus>())
+    {
+        var s = status;
+        <button class="filter-chip @(activeFilter == s ? "filter-chip--active" : "")"
+                @onclick="() => SetFilter(s)">@StatusLabel(s)</button>
+    }
+</div>
+
+<!-- Grid -->
+@if (loading)
+{
+    <div class="anime-grid">
+        @for (int i = 0; i < 10; i++)
+        {
+            <div class="skeleton-card">
+                <div class="skeleton-cover skeleton-shimmer"></div>
+                <div class="skeleton-info">
+                    <div class="skeleton-title skeleton-shimmer"></div>
+                    <div class="skeleton-meta skeleton-shimmer"></div>
+                </div>
+            </div>
+        }
+    </div>
+}
+else if (error is not null)
+{
+    <div class="empty-state">
+        <div class="empty-state__icon">⚠️</div>
+        <div class="empty-state__title">Algo salió mal</div>
+        <div class="empty-state__desc">@error</div>
+        <button class="btn btn-primary" style="margin-top:16px" @onclick="LoadListAsync">Reintentar</button>
+    </div>
+}
+else if (!entries.Any())
+{
+    <div class="empty-state">
+        <div class="empty-state__icon">🎌</div>
+        <div class="empty-state__title">Tu lista está vacía</div>
+        <div class="empty-state__desc">¡Busca un anime y agrégalo a tu lista!</div>
+    </div>
+}
+else
+{
+    <div class="anime-grid">
+        @foreach (var entry in entries)
+        {
+            <AnimeCard Anime="@entry" />
+        }
+    </div>
+}
+
+@inject AnimeListApiService ApiSvc
+
+@code {
+    List<AnimeEntryResponse> entries = [];
+    WatchStatus? activeFilter;
+    bool loading = true;
+    string? error;
+
+    protected override async Task OnInitializedAsync() => await LoadListAsync();
+
+    private async Task SetFilter(WatchStatus? filter)
+    {
+        activeFilter = filter;
+        await LoadListAsync();
+    }
+
+    private async Task LoadListAsync()
+    {
+        loading = true; error = null;
+        try { entries = await ApiSvc.GetListAsync(activeFilter); }
+        catch { error = "No se pudo cargar la lista. Verifica tu conexión."; }
+        finally { loading = false; }
+    }
+
+    private static string StatusLabel(WatchStatus s) => s switch
+    {
+        WatchStatus.Watching    => "Viendo",
+        WatchStatus.Completed   => "Completado",
+        WatchStatus.PlanToWatch => "Por ver",
+        WatchStatus.OnHold      => "En pausa",
+        WatchStatus.Dropped     => "Abandonado",
+        _ => s.ToString()
+    };
+}

@@ -1,0 +1,28 @@
+@inherits LayoutComponentBase
+
+<AuthorizeView>
+    <Authorized>
+        <nav class="navbar">
+            <span class="navbar__brand">AniwebList</span>
+            <div class="navbar__actions">
+                <span style="font-size:var(--text-sm);color:var(--color-text-muted)">@context.User.Identity?.Name</span>
+                <button class="btn btn-secondary btn-sm" @onclick="LogoutAsync">Salir</button>
+            </div>
+        </nav>
+        <main class="page-container">@Body</main>
+    </Authorized>
+    <NotAuthorized>
+        <main>@Body</main>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    [Inject] AuthService AuthSvc { get; set; } = null!;
+    [Inject] NavigationManager Nav { get; set; } = null!;
+
+    private async Task LogoutAsync()
+    {
+        await AuthSvc.LogoutAsync();
+        Nav.NavigateTo("/login", forceLoad: false);
+    }
+}

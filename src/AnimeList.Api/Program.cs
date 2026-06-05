@@ -1,4 +1,5 @@
 using System.Text;
+using System.Text.Json.Serialization;
 using AnimeList.Core.Entities;
 using AnimeList.Infrastructure;
 using AnimeList.Infrastructure.Data;
@@ -32,8 +33,14 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
+builder.Services.AddCors(options =>
+    options.AddDefaultPolicy(policy =>
+        policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod()));
+
 builder.Services.AddInfrastructure();
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(o =>
+        o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
 var app = builder.Build();
 
@@ -41,6 +48,7 @@ if (app.Environment.IsDevelopment())
     app.UseDeveloperExceptionPage();
 
 app.UseHttpsRedirection();
+app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
