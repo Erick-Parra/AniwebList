@@ -14,6 +14,14 @@ public class AnimeListController(IAnimeListService animeListService) : Controlle
 {
     private string UserId => User.FindFirstValue(ClaimTypes.NameIdentifier)!;
 
+    [HttpGet("{entryId:int}")]
+    public async Task<ActionResult<AnimeEntryResponse>> GetEntry(int entryId, CancellationToken ct)
+    {
+        var entry = await animeListService.GetEntryAsync(UserId, entryId, ct);
+        if (entry is null) return NotFound();
+        return Ok(entry);
+    }
+
     [HttpGet]
     public async Task<ActionResult<IEnumerable<AnimeEntryResponse>>> GetList(
         [FromQuery] WatchStatus? status, CancellationToken ct)

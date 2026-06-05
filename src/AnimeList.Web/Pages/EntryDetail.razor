@@ -1,0 +1,221 @@
+@page "/entry/{EntryId:int}"
+@attribute [Authorize]
+
+<PageTitle>@(entry?.Title ?? "Detalle") — AniwebList</PageTitle>
+
+@if (loading)
+{
+    <div class="detail-skeleton">
+        <div class="detail-skeleton__cover skeleton-shimmer"></div>
+        <div class="detail-skeleton__info">
+            <div class="skeleton-title skeleton-shimmer" style="height:28px;width:60%;margin-bottom:12px"></div>
+            <div class="skeleton-meta skeleton-shimmer" style="height:16px;width:40%;margin-bottom:8px"></div>
+            <div class="skeleton-meta skeleton-shimmer" style="height:80px;width:100%"></div>
+        </div>
+    </div>
+}
+else if (entry is null)
+{
+    <div class="empty-state">
+        <div class="empty-state__icon">❌</div>
+        <div class="empty-state__title">Entrada no encontrada</div>
+        <div class="empty-state__desc">Esta entrada no existe o fue eliminada.</div>
+        <NavLink class="btn btn-primary" href="/mi-lista" style="margin-top:16px">Volver a mi lista</NavLink>
+    </div>
+}
+else
+{
+    <div class="detail-back">
+        <NavLink href="/mi-lista" class="detail-back__link">← Volver a mi lista</NavLink>
+    </div>
+
+    <div class="detail-layout">
+        <!-- Portada -->
+        <div class="detail-cover">
+            @if (!string.IsNullOrEmpty(entry.ImageUrl))
+            {
+                <img src="@entry.ImageUrl" alt="@entry.Title" />
+            }
+            else
+            {
+                <div class="detail-cover__empty">🎬</div>
+            }
+        </div>
+
+        <!-- Info + controles -->
+        <div class="detail-content">
+            <h1 class="detail-title">@entry.Title</h1>
+            @if (!string.IsNullOrEmpty(entry.TitleEnglish) && entry.TitleEnglish != entry.Title)
+            {
+                <div class="detail-title-alt">@entry.TitleEnglish</div>
+            }
+            <div class="detail-meta">
+                @if (entry.EpisodeCount.HasValue) { <span>@entry.EpisodeCount episodios</span><span>·</span> }
+                <span>@AirLabel(entry.AirStatus)</span>
+            </div>
+            @if (!string.IsNullOrEmpty(entry.Synopsis))
+            {
+                <p class="detail-synopsis">@entry.Synopsis</p>
+            }
+
+            <!-- Estado -->
+            <div class="detail-section">
+                <div class="detail-section__label">Estado</div>
+                <div class="filter-chips" style="margin-bottom:0">
+                    @foreach (var s in Enum.GetValues<WatchStatus>())
+                    {
+                        var status = s;
+                        <button class="filter-chip @(form.WatchStatus == status ? "filter-chip--active" : "")"
+                                @onclick="() => form.WatchStatus = status">
+                            @StatusLabel(status)
+                        </button>
+                    }
+                </div>
+            </div>
+
+            <!-- Episodios -->
+            <div class="detail-section">
+                <div class="detail-section__label">
+                    Episodios vistos
+                    @if (entry.EpisodeCount.HasValue) { <span class="detail-section__sub">/ @entry.EpisodeCount</span> }
+                </div>
+                <div class="episode-stepper">
+                    <button class="btn btn-secondary btn-sm" @onclick="DecrementEpisodes"
+                            disabled="@(form.EpisodesWatched <= 0)">−</button>
+                    <input class="form-input episode-input" type="number" min="0"
+                           max="@(entry.EpisodeCount ?? 9999)"
+                           @bind="form.EpisodesWatched" />
+                    <button class="btn btn-secondary btn-sm" @onclick="IncrementEpisodes"
+                            disabled="@(entry.EpisodeCount.HasValue && form.EpisodesWatched >= entry.EpisodeCount)">+</button>
+                </div>
+            </div>
+
+            <!-- Puntuación -->
+            <div class="detail-section">
+                <div class="detail-section__label">Puntuación</div>
+                <div class="score-selector">
+                    @for (int i = 1; i <= 10; i++)
+                    {
+                        var score = i;
+                        <button class="score-btn @(form.Score == score ? "score-btn--active" : "")"
+                                @onclick="() => SetScore(score)">
+                            @score
+                        </button>
+                    }
+                    @if (form.Score.HasValue)
+                    {
+                        <button class="score-btn score-btn--clear" @onclick="() => form.Score = null"
+                                title="Quitar puntuación">✕</button>
+                    }
+                </div>
+            </div>
+
+            <!-- Favorito -->
+            <div class="detail-section">
+                <button class="favorite-toggle @(form.IsFavorite ? "favorite-toggle--active" : "")"
+                        @onclick="() => form.IsFavorite = !form.IsFavorite">
+                    @(form.IsFavorite ? "❤️" : "🤍") Favorito
+                </button>
+            </div>
+
+            <!-- Mensajes -->
+            @if (saveError is not null)
+            {
+                <div class="auth-error">@saveError</div>
+            }
+            @if (saved)
+            {
+                <div class="save-success">Cambios guardados</div>
+            }
+
+            <!-- Acciones -->
+            <div class="detail-actions">
+                <button class="btn btn-primary" @onclick="SaveAsync" disabled="@saving">
+                    @(saving ? "Guardando..." : "Guardar cambios")
+                </button>
+                <button class="btn btn-danger" @onclick="RemoveAsync" disabled="@removing">
+                    @(removing ? "Quitando..." : "Quitar de mi lista")
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+@inject AnimeListApiService ApiSvc
+@inject NavigationManager Nav
+
+@code {
+    [Parameter] public int EntryId { get; set; }
+
+    AnimeEntryResponse? entry;
+    UpdateAnimeEntryRequest form = new();
+    bool loading = true, saving, removing;
+    bool saved;
+    string? saveError;
+
+    protected override async Task OnInitializedAsync()
+    {
+        entry = await ApiSvc.GetEntryAsync(EntryId);
+        if (entry is not null)
+        {
+            form.WatchStatus     = entry.WatchStatus;
+            form.EpisodesWatched = entry.EpisodesWatched;
+            form.Score           = entry.Score;
+            form.IsFavorite      = entry.IsFavorite;
+            form.StartedAt       = entry.StartedAt;
+            form.FinishedAt      = entry.FinishedAt;
+        }
+        loading = false;
+    }
+
+    private async Task SaveAsync()
+    {
+        saving = true; saveError = null; saved = false;
+        var updated = await ApiSvc.UpdateAsync(EntryId, form);
+        if (updated is null) saveError = "No se pudieron guardar los cambios.";
+        else { entry = updated; saved = true; }
+        saving = false;
+    }
+
+    private async Task RemoveAsync()
+    {
+        removing = true;
+        var ok = await ApiSvc.RemoveAsync(EntryId);
+        if (ok) Nav.NavigateTo("/mi-lista");
+        else removing = false;
+    }
+
+    private void IncrementEpisodes()
+    {
+        var max = entry?.EpisodeCount ?? int.MaxValue;
+        if (form.EpisodesWatched < max) form.EpisodesWatched++;
+    }
+
+    private void DecrementEpisodes()
+    {
+        if (form.EpisodesWatched > 0) form.EpisodesWatched--;
+    }
+
+    private void SetScore(int score)
+    {
+        form.Score = form.Score == score ? null : score;
+    }
+
+    private static string AirLabel(AnimeAirStatus s) => s switch
+    {
+        AnimeAirStatus.Airing      => "En emisión",
+        AnimeAirStatus.Finished    => "Finalizado",
+        AnimeAirStatus.NotYetAired => "Próximamente",
+        _ => ""
+    };
+
+    private static string StatusLabel(WatchStatus s) => s switch
+    {
+        WatchStatus.Watching    => "Viendo",
+        WatchStatus.Completed   => "Completado",
+        WatchStatus.PlanToWatch => "Por ver",
+        WatchStatus.OnHold      => "En pausa",
+        WatchStatus.Dropped     => "Abandonado",
+        _ => s.ToString()
+    };
+}

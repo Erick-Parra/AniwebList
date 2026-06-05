@@ -23,6 +23,14 @@ public sealed class AnimeListService(AppDbContext db, IJikanService jikanService
         return entries.Select(MapToResponse);
     }
 
+    public async Task<AnimeEntryResponse?> GetEntryAsync(string userId, int entryId, CancellationToken ct = default)
+    {
+        var entry = await db.UserAnimeEntries
+            .Include(e => e.Anime)
+            .FirstOrDefaultAsync(e => e.Id == entryId && e.UserId == userId, ct);
+        return entry is null ? null : MapToResponse(entry);
+    }
+
     public async Task<AnimeEntryResponse?> AddAsync(string userId, int malId, CancellationToken ct = default)
     {
         var anime = await jikanService.ObtenerAnimePorMalIdAsync(malId, ct);
@@ -91,6 +99,7 @@ public sealed class AnimeListService(AppDbContext db, IJikanService jikanService
         e.Anime.Title,
         e.Anime.TitleEnglish,
         e.Anime.ImageUrl,
+        e.Anime.Synopsis,
         e.Anime.EpisodeCount,
         e.Anime.AirStatus,
         e.WatchStatus,

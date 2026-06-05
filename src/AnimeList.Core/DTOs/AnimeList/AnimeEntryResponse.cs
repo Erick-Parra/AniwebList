@@ -8,6 +8,7 @@ public record AnimeEntryResponse(
     string Title,
     string? TitleEnglish,
     string? ImageUrl,
+    string? Synopsis,
     int? EpisodeCount,
     AnimeAirStatus AirStatus,
     WatchStatus WatchStatus,

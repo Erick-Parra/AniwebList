@@ -7,6 +7,7 @@ public class AnimeEntryResponse
     public string Title { get; set; } = "";
     public string? TitleEnglish { get; set; }
     public string? ImageUrl { get; set; }
+    public string? Synopsis { get; set; }
     public int? EpisodeCount { get; set; }
     public AnimeAirStatus AirStatus { get; set; }
     public WatchStatus WatchStatus { get; set; }
