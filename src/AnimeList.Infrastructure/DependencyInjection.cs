@@ -1,4 +1,5 @@
 using AnimeList.Core.Interfaces;
+using AnimeList.Infrastructure.Auth;
 using AnimeList.Infrastructure.Jikan;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -16,6 +17,7 @@ public static class DependencyInjection
         });
 
         services.AddScoped<IJikanService, JikanService>();
+        services.AddScoped<ITokenService, TokenService>();
 
         return services;
     }

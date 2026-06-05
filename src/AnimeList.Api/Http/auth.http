@@ -1,0 +1,30 @@
+@baseUrl = https://localhost:7001
+@contentType = application/json
+
+### Registro de nuevo usuario
+POST {{baseUrl}}/api/auth/register
+Content-Type: {{contentType}}
+
+{
+  "userName": "erick",
+  "email": "erick@example.com",
+  "password": "Password123!"
+}
+
+### Login
+POST {{baseUrl}}/api/auth/login
+Content-Type: {{contentType}}
+
+{
+  "email": "erick@example.com",
+  "password": "Password123!"
+}
+
+### Login con credenciales incorrectas (debe devolver 401)
+POST {{baseUrl}}/api/auth/login
+Content-Type: {{contentType}}
+
+{
+  "email": "erick@example.com",
+  "password": "WrongPassword"
+}
