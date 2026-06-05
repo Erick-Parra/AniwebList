@@ -12,12 +12,21 @@ public class JwtAuthStateProvider(IJSRuntime js) : AuthenticationStateProvider
 
     public override async Task<AuthenticationState> GetAuthenticationStateAsync()
     {
-        var token = await js.InvokeAsync<string?>("localStorage.getItem", "authToken");
-        if (string.IsNullOrWhiteSpace(token)) return Anonymous;
+        try
+        {
+            var token = await js.InvokeAsync<string?>("localStorage.getItem", "authToken");
+            if (string.IsNullOrWhiteSpace(token)) return Anonymous;
 
-        var claims = ParseClaims(token);
-        var identity = new ClaimsIdentity(claims, "jwt");
-        return new AuthenticationState(new ClaimsPrincipal(identity));
+            var claims = ParseClaims(token);
+            var identity = new ClaimsIdentity(claims, "jwt");
+            return new AuthenticationState(new ClaimsPrincipal(identity));
+        }
+        catch
+        {
+            // Token corrupto o localStorage no disponible — limpiar y tratar como anónimo
+            try { await js.InvokeVoidAsync("localStorage.removeItem", "authToken"); } catch { }
+            return Anonymous;
+        }
     }
 
     public async Task NotifyLoginAsync(string token)
@@ -40,7 +49,9 @@ public class JwtAuthStateProvider(IJSRuntime js) : AuthenticationStateProvider
 
     private static IEnumerable<Claim> ParseClaims(string jwt)
     {
-        var payload = jwt.Split('.')[1];
+        var parts = jwt.Split('.');
+        if (parts.Length < 3) return [];
+        var payload = parts[1];
         var padded = (payload.Length % 4) switch { 2 => payload + "==", 3 => payload + "=", _ => payload };
         var bytes = Convert.FromBase64String(padded.Replace('-', '+').Replace('_', '/'));
         var dict = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(bytes) ?? [];

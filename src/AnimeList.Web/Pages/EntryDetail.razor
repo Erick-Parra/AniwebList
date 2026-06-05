@@ -155,17 +155,21 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        entry = await ApiSvc.GetEntryAsync(EntryId);
-        if (entry is not null)
+        try
         {
-            form.WatchStatus     = entry.WatchStatus;
-            form.EpisodesWatched = entry.EpisodesWatched;
-            form.Score           = entry.Score;
-            form.IsFavorite      = entry.IsFavorite;
-            form.StartedAt       = entry.StartedAt;
-            form.FinishedAt      = entry.FinishedAt;
+            entry = await ApiSvc.GetEntryAsync(EntryId);
+            if (entry is not null)
+            {
+                form.WatchStatus     = entry.WatchStatus;
+                form.EpisodesWatched = entry.EpisodesWatched;
+                form.Score           = entry.Score;
+                form.IsFavorite      = entry.IsFavorite;
+                form.StartedAt       = entry.StartedAt;
+                form.FinishedAt      = entry.FinishedAt;
+            }
         }
-        loading = false;
+        catch { /* entry queda null, la UI muestra "no encontrado" */ }
+        finally { loading = false; }
     }
 
     private async Task SaveAsync()
