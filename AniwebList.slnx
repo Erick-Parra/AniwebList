@@ -1,0 +1,7 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/AnimeList.Api/AnimeList.Api.csproj" />
+    <Project Path="src/AnimeList.Core/AnimeList.Core.csproj" />
+    <Project Path="src/AnimeList.Infrastructure/AnimeList.Infrastructure.csproj" />
+  </Folder>
+</Solution>
