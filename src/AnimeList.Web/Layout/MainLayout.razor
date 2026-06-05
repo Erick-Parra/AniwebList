@@ -4,6 +4,10 @@
     <Authorized>
         <nav class="navbar">
             <span class="navbar__brand">AniwebList</span>
+            <div class="navbar__nav">
+                <NavLink class="navbar__nav-link" href="/mi-lista" Match="NavLinkMatch.All">Mi lista</NavLink>
+                <NavLink class="navbar__nav-link" href="/buscar">Buscar</NavLink>
+            </div>
             <div class="navbar__actions">
                 <span style="font-size:var(--text-sm);color:var(--color-text-muted)">@context.User.Identity?.Name</span>
                 <button class="btn btn-secondary btn-sm" @onclick="LogoutAsync">Salir</button>

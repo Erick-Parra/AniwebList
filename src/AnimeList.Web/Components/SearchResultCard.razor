@@ -1,0 +1,62 @@
+@using AnimeList.Web.Models
+
+<div class="search-card">
+    <div class="search-card__cover">
+        @if (!string.IsNullOrEmpty(Anime.ImageUrl))
+        {
+            <img src="@Anime.ImageUrl" alt="@Anime.Title" loading="lazy" />
+        }
+        else
+        {
+            <div class="search-card__cover-empty">🎬</div>
+        }
+    </div>
+    <div class="search-card__body">
+        <div class="search-card__title">@Anime.Title</div>
+        <div class="search-card__meta">
+            @if (Anime.EpisodeCount.HasValue)
+            {
+                <span>@Anime.EpisodeCount ep. · </span>
+            }
+            <span>@AirLabel</span>
+        </div>
+        <div class="search-card__actions">
+            @if (IsInList)
+            {
+                <button class="btn btn-secondary btn-sm" disabled style="width:100%;opacity:.6;cursor:default">
+                    En mi lista
+                </button>
+            }
+            else
+            {
+                <button class="btn btn-primary btn-sm" @onclick="HandleAdd"
+                        disabled="@_adding" style="width:100%">
+                    @(_adding ? "..." : "Agregar")
+                </button>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public AnimeSearchResult Anime { get; set; } = null!;
+    [Parameter] public bool IsInList { get; set; }
+    [Parameter] public EventCallback<int> OnAddClicked { get; set; }
+
+    bool _adding;
+
+    private string AirLabel => Anime.AirStatus switch
+    {
+        AnimeAirStatus.Airing      => "En emisión",
+        AnimeAirStatus.Finished    => "Finalizado",
+        AnimeAirStatus.NotYetAired => "Próximamente",
+        _ => ""
+    };
+
+    private async Task HandleAdd()
+    {
+        _adding = true;
+        await OnAddClicked.InvokeAsync(Anime.MalId);
+        _adding = false;
+    }
+}

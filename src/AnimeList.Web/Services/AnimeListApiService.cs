@@ -33,6 +33,15 @@ public class AnimeListApiService(HttpClient http, JwtAuthStateProvider authState
         return await res.Content.ReadFromJsonAsync<AnimeEntryResponse>(JsonOpts);
     }
 
+    public async Task<List<AnimeSearchResult>> SearchAsync(string query)
+    {
+        var req = await BuildRequestAsync(HttpMethod.Get,
+            $"api/animes/search?q={Uri.EscapeDataString(query)}");
+        var res = await http.SendAsync(req);
+        if (!res.IsSuccessStatusCode) return [];
+        return await res.Content.ReadFromJsonAsync<List<AnimeSearchResult>>(JsonOpts) ?? [];
+    }
+
     public async Task<bool> RemoveAsync(int entryId)
     {
         var req = await BuildRequestAsync(HttpMethod.Delete, $"api/anime-list/{entryId}");

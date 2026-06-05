@@ -1,0 +1,105 @@
+@page "/buscar"
+@attribute [Authorize]
+
+<PageTitle>Buscar — AniwebList</PageTitle>
+
+<div class="page-header">
+    <h1 class="page-title">Buscar Anime</h1>
+</div>
+
+<div class="search-bar">
+    <input class="form-input" type="search" @bind="query" @bind:event="oninput"
+           @onkeydown="OnKeyDown" placeholder="Ej: Attack on Titan, Naruto..." />
+    <button class="btn btn-primary" @onclick="DoSearchAsync"
+            disabled="@(loading || string.IsNullOrWhiteSpace(query))">
+        Buscar
+    </button>
+</div>
+
+@if (loading)
+{
+    <div class="anime-grid">
+        @for (int i = 0; i < 10; i++)
+        {
+            <div class="skeleton-card">
+                <div class="skeleton-cover skeleton-shimmer"></div>
+                <div class="skeleton-info">
+                    <div class="skeleton-title skeleton-shimmer"></div>
+                    <div class="skeleton-meta skeleton-shimmer"></div>
+                </div>
+            </div>
+        }
+    </div>
+}
+else if (error is not null)
+{
+    <div class="empty-state">
+        <div class="empty-state__icon">⚠️</div>
+        <div class="empty-state__title">Error al buscar</div>
+        <div class="empty-state__desc">@error</div>
+        <button class="btn btn-primary" style="margin-top:16px" @onclick="DoSearchAsync">Reintentar</button>
+    </div>
+}
+else if (searched && !results.Any())
+{
+    <div class="empty-state">
+        <div class="empty-state__icon">🔍</div>
+        <div class="empty-state__title">Sin resultados</div>
+        <div class="empty-state__desc">Intenta con otro título.</div>
+    </div>
+}
+else if (results.Any())
+{
+    <div class="anime-grid">
+        @foreach (var anime in results)
+        {
+            <SearchResultCard Anime="@anime"
+                              IsInList="@listMalIds.Contains(anime.MalId)"
+                              OnAddClicked="AddToListAsync" />
+        }
+    </div>
+}
+
+@inject AnimeListApiService ApiSvc
+
+@code {
+    string query = "";
+    bool loading, searched;
+    string? error;
+    List<AnimeSearchResult> results = [];
+    HashSet<int> listMalIds = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var list = await ApiSvc.GetListAsync();
+            listMalIds = list.Select(e => e.MalId).ToHashSet();
+        }
+        catch { }
+    }
+
+    private async Task DoSearchAsync()
+    {
+        if (string.IsNullOrWhiteSpace(query)) return;
+        loading = true; error = null; searched = true;
+        try { results = await ApiSvc.SearchAsync(query); }
+        catch { error = "No se pudo realizar la búsqueda. Verifica tu conexión."; }
+        finally { loading = false; }
+    }
+
+    private async Task AddToListAsync(int malId)
+    {
+        try
+        {
+            await ApiSvc.AddAsync(malId);
+            listMalIds.Add(malId);
+        }
+        catch { }
+    }
+
+    private async Task OnKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter") await DoSearchAsync();
+    }
+}
