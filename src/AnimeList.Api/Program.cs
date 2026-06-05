@@ -37,6 +37,9 @@ builder.Services.AddControllers();
 
 var app = builder.Build();
 
+if (app.Environment.IsDevelopment())
+    app.UseDeveloperExceptionPage();
+
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();

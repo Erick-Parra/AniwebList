@@ -1,0 +1,75 @@
+@baseUrl = http://localhost:5294
+
+### 1. Login para obtener el token
+# @name login
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "erick@example.com",
+  "password": "Password123!"
+}
+
+### Guarda el token de la respuesta anterior en @token
+@token = {{login.response.body.token}}
+
+###
+
+### 2. Agregar un anime a mi lista (Attack on Titan = MalId 16498)
+POST {{baseUrl}}/api/anime-list
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "malId": 16498
+}
+
+###
+
+### 3. Agregar otro anime (Fullmetal Alchemist Brotherhood = MalId 5114)
+POST {{baseUrl}}/api/anime-list
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "malId": 5114
+}
+
+###
+
+### 4. Ver mi lista completa
+GET {{baseUrl}}/api/anime-list
+Authorization: Bearer {{token}}
+
+###
+
+### 5. Ver mi lista filtrada por estado (PlanToWatch)
+GET {{baseUrl}}/api/anime-list?status=PlanToWatch
+Authorization: Bearer {{token}}
+
+###
+
+### 6. Actualizar una entrada (reemplaza {entryId} con el id real)
+PUT {{baseUrl}}/api/anime-list/1
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "watchStatus": "Watching",
+  "episodesWatched": 5,
+  "score": null,
+  "isFavorite": true,
+  "startedAt": "2026-06-01T00:00:00Z",
+  "finishedAt": null
+}
+
+###
+
+### 7. Eliminar una entrada (reemplaza {entryId} con el id real)
+DELETE {{baseUrl}}/api/anime-list/1
+Authorization: Bearer {{token}}
+
+###
+
+### 8. Sin token — debe devolver 401
+GET {{baseUrl}}/api/anime-list
