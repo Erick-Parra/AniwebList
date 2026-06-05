@@ -18,5 +18,6 @@ builder.Services.AddScoped<AuthenticationStateProvider>(sp =>
     sp.GetRequiredService<JwtAuthStateProvider>());
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<AnimeListApiService>();
+builder.Services.AddScoped<ThemeService>();
 
 await builder.Build().RunAsync();

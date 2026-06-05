@@ -1,4 +1,6 @@
 @inherits LayoutComponentBase
+@implements IDisposable
+@inject ThemeService ThemeSvc
 
 <AuthorizeView>
     <Authorized>
@@ -9,6 +11,10 @@
                 <NavLink class="navbar__nav-link" href="/buscar">Buscar</NavLink>
             </div>
             <div class="navbar__actions">
+                <button class="theme-toggle" @onclick="ToggleThemeAsync"
+                        title="@(ThemeSvc.IsDark ? "Cambiar a tema claro" : "Cambiar a tema oscuro")">
+                    @(ThemeSvc.IsDark ? "☀️" : "🌙")
+                </button>
                 <span style="font-size:var(--text-sm);color:var(--color-text-muted)">@context.User.Identity?.Name</span>
                 <button class="btn btn-secondary btn-sm" @onclick="LogoutAsync">Salir</button>
             </div>
@@ -23,6 +29,12 @@
 @code {
     [Inject] AuthService AuthSvc { get; set; } = null!;
     [Inject] NavigationManager Nav { get; set; } = null!;
+
+    protected override void OnInitialized() => ThemeSvc.OnChange += StateHasChanged;
+
+    public void Dispose() => ThemeSvc.OnChange -= StateHasChanged;
+
+    private async Task ToggleThemeAsync() => await ThemeSvc.ToggleAsync();
 
     private async Task LogoutAsync()
     {
