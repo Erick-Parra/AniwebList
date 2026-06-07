@@ -118,6 +118,42 @@ else
                 </button>
             </div>
 
+            <!-- Reseña -->
+            <div class="detail-section">
+                <div class="detail-section__label">Reseña personal</div>
+                @if (reviewLoading)
+                {
+                    <div class="skeleton-shimmer" style="height:80px;border-radius:8px"></div>
+                }
+                else
+                {
+                    <textarea class="review-textarea" rows="4"
+                              placeholder="Escribe tu opinión sobre este anime..."
+                              @bind="reviewContent" @bind:event="oninput"></textarea>
+                    @if (reviewError is not null)
+                    {
+                        <div class="auth-error" style="margin-top:6px">@reviewError</div>
+                    }
+                    @if (reviewSaved)
+                    {
+                        <div class="save-success" style="margin-top:6px">Reseña guardada</div>
+                    }
+                    <div class="review-actions">
+                        <button class="btn btn-primary btn-sm" @onclick="SaveReviewAsync"
+                                disabled="@(reviewSaving || string.IsNullOrWhiteSpace(reviewContent))">
+                            @(reviewSaving ? "Guardando..." : review is null ? "Guardar reseña" : "Actualizar reseña")
+                        </button>
+                        @if (review is not null)
+                        {
+                            <button class="btn btn-danger btn-sm" @onclick="DeleteReviewAsync"
+                                    disabled="@reviewSaving">
+                                Eliminar reseña
+                            </button>
+                        }
+                    </div>
+                }
+            </div>
+
             <!-- Mensajes -->
             @if (saveError is not null)
             {
@@ -142,6 +178,7 @@ else
 }
 
 @inject AnimeListApiService ApiSvc
+@inject ReviewApiService ReviewSvc
 @inject NavigationManager Nav
 
 @code {
@@ -152,6 +189,11 @@ else
     bool loading = true, saving, removing;
     bool saved;
     string? saveError;
+
+    ReviewResponse? review;
+    string reviewContent = "";
+    bool reviewLoading, reviewSaving, reviewSaved;
+    string? reviewError;
 
     protected override async Task OnInitializedAsync()
     {
@@ -166,10 +208,23 @@ else
                 form.IsFavorite      = entry.IsFavorite;
                 form.StartedAt       = entry.StartedAt;
                 form.FinishedAt      = entry.FinishedAt;
+
+                reviewLoading = true;
             }
         }
         catch { /* entry queda null, la UI muestra "no encontrado" */ }
         finally { loading = false; }
+
+        if (entry is not null)
+        {
+            try
+            {
+                review = await ReviewSvc.GetAsync(entry.MalId);
+                reviewContent = review?.Content ?? "";
+            }
+            catch { }
+            finally { reviewLoading = false; }
+        }
     }
 
     private async Task SaveAsync()
@@ -187,6 +242,26 @@ else
         var ok = await ApiSvc.RemoveAsync(EntryId);
         if (ok) Nav.NavigateTo("/mi-lista");
         else removing = false;
+    }
+
+    private async Task SaveReviewAsync()
+    {
+        if (entry is null || string.IsNullOrWhiteSpace(reviewContent)) return;
+        reviewSaving = true; reviewError = null; reviewSaved = false;
+        review = await ReviewSvc.UpsertAsync(entry.MalId, reviewContent.Trim());
+        if (review is null) reviewError = "No se pudo guardar la reseña.";
+        else { reviewContent = review.Content; reviewSaved = true; }
+        reviewSaving = false;
+    }
+
+    private async Task DeleteReviewAsync()
+    {
+        if (entry is null || review is null) return;
+        reviewSaving = true; reviewError = null; reviewSaved = false;
+        var ok = await ReviewSvc.DeleteAsync(entry.MalId);
+        if (ok) { review = null; reviewContent = ""; }
+        else reviewError = "No se pudo eliminar la reseña.";
+        reviewSaving = false;
     }
 
     private void IncrementEpisodes()

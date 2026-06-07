@@ -9,6 +9,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
 {
     public DbSet<Anime> Animes => Set<Anime>();
     public DbSet<UserAnimeEntry> UserAnimeEntries => Set<UserAnimeEntry>();
+    public DbSet<Review> Reviews => Set<Review>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -32,6 +33,21 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
                  .WithMany(a => a.UserEntries)
                  .HasForeignKey(e => e.AnimeId)
                  .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        builder.Entity<Review>(review =>
+        {
+            review.HasIndex(r => new { r.UserId, r.AnimeId }).IsUnique();
+
+            review.HasOne(r => r.User)
+                  .WithMany()
+                  .HasForeignKey(r => r.UserId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            review.HasOne(r => r.Anime)
+                  .WithMany()
+                  .HasForeignKey(r => r.AnimeId)
+                  .OnDelete(DeleteBehavior.Restrict);
         });
     }
 }

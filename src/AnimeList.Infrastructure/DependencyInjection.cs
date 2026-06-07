@@ -21,6 +21,7 @@ public static class DependencyInjection
         services.AddScoped<ITokenService, TokenService>();
         services.AddScoped<IAnimeListService, AnimeListService>();
         services.AddScoped<IStatsService, StatsService>();
+        services.AddScoped<IReviewService, ReviewService>();
 
         return services;
     }
