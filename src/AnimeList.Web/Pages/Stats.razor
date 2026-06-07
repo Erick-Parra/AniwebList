@@ -1,0 +1,104 @@
+@page "/estadisticas"
+@attribute [Authorize]
+
+<PageTitle>Estadísticas — AniwebList</PageTitle>
+
+<div class="page-header">
+    <h1 class="page-title">Mis Estadísticas</h1>
+</div>
+
+@if (loading)
+{
+    <div class="stats-grid">
+        @for (int i = 0; i < 5; i++)
+        {
+            <div class="stat-card skeleton-shimmer" style="height:110px;border-radius:var(--radius-md)"></div>
+        }
+    </div>
+}
+else if (error is not null)
+{
+    <div class="empty-state">
+        <div class="empty-state__icon">⚠️</div>
+        <div class="empty-state__title">No se pudieron cargar las estadísticas</div>
+        <div class="empty-state__desc">@error</div>
+        <button class="btn btn-primary" style="margin-top:16px" @onclick="LoadAsync">Reintentar</button>
+    </div>
+}
+else if (stats is not null)
+{
+    <!-- Tarjetas resumen -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-card__value">@stats.TotalAnimes</div>
+            <div class="stat-card__label">Animes en lista</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-card__value">@stats.TotalEpisodesWatched</div>
+            <div class="stat-card__label">Episodios vistos</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-card__value">@stats.HoursWatched<span class="stat-card__unit">h</span></div>
+            <div class="stat-card__label">Horas estimadas</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-card__value">
+                @(stats.AverageScore.HasValue ? stats.AverageScore.Value.ToString("0.0") : "—")
+            </div>
+            <div class="stat-card__label">Score promedio</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-card__value">@stats.TotalFavorites</div>
+            <div class="stat-card__label">Favoritos</div>
+        </div>
+    </div>
+
+    <!-- Por estado -->
+    @if (stats.TotalAnimes > 0)
+    {
+        <div class="stats-section">
+            <h2 class="stats-section__title">Por estado</h2>
+            <div class="status-bars">
+                @StatusBar("Viendo",      stats.Watching,    stats.TotalAnimes, "var(--status-watching)")
+                @StatusBar("Completado",  stats.Completed,   stats.TotalAnimes, "var(--status-completed)")
+                @StatusBar("Por ver",     stats.PlanToWatch, stats.TotalAnimes, "var(--status-plan)")
+                @StatusBar("En pausa",    stats.OnHold,      stats.TotalAnimes, "var(--status-onhold)")
+                @StatusBar("Abandonado",  stats.Dropped,     stats.TotalAnimes, "var(--status-dropped)")
+            </div>
+        </div>
+    }
+}
+
+@inject StatsApiService StatsSvc
+
+@code {
+    StatsResponse? stats;
+    bool loading = true;
+    string? error;
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        loading = true; error = null;
+        try
+        {
+            stats = await StatsSvc.GetStatsAsync();
+            if (stats is null) error = "El servidor no respondió correctamente.";
+        }
+        catch { error = "No se pudo cargar. Verifica tu conexión."; }
+        finally { loading = false; }
+    }
+
+    private RenderFragment StatusBar(string label, int count, int total, string color) => __builder =>
+    {
+        var pct = total > 0 ? count * 100.0 / total : 0;
+        <div class="status-bar">
+            <div class="status-bar__label">@label</div>
+            <div class="status-bar__track">
+                <div class="status-bar__fill" style="width:@pct.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture)%;background:@color"></div>
+            </div>
+            <div class="status-bar__count">@count</div>
+        </div>
+    };
+}

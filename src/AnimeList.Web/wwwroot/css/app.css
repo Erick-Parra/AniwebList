@@ -306,6 +306,39 @@ img { max-width: 100%; display: block; }
 .detail-skeleton__cover { aspect-ratio: 2/3; border-radius: var(--radius-md); }
 .detail-skeleton__info { padding-top: 8px; }
 
+/* ── Estadísticas ────────────────────────────────────────────── */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 16px;
+  margin-bottom: 36px;
+}
+.stat-card {
+  background: var(--color-surface); border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm); padding: 24px 20px; text-align: center;
+}
+.stat-card__value {
+  font-size: 2rem; font-weight: 700; color: var(--color-primary); line-height: 1;
+}
+.stat-card__unit { font-size: 1.1rem; font-weight: 500; }
+.stat-card__label {
+  font-size: var(--text-xs); color: var(--color-text-muted);
+  margin-top: 6px; font-weight: 500; text-transform: uppercase; letter-spacing: .04em;
+}
+
+.stats-section { margin-top: 8px; }
+.stats-section__title {
+  font-size: var(--text-lg); font-weight: 600; margin-bottom: 16px;
+}
+.status-bars { display: flex; flex-direction: column; gap: 12px; }
+.status-bar { display: grid; grid-template-columns: 110px 1fr 36px; align-items: center; gap: 12px; }
+.status-bar__label { font-size: var(--text-sm); color: var(--color-text-muted); }
+.status-bar__track {
+  height: 8px; background: var(--color-border); border-radius: 999px; overflow: hidden;
+}
+.status-bar__fill { height: 100%; border-radius: 999px; transition: width 600ms ease; }
+.status-bar__count { font-size: var(--text-sm); font-weight: 600; text-align: right; }
+
 /* ── Blazor loading & error UI ───────────────────────────────── */
 .loading-progress { display: none; }
 

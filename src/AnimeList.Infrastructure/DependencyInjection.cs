@@ -20,6 +20,7 @@ public static class DependencyInjection
         services.AddScoped<IJikanService, JikanService>();
         services.AddScoped<ITokenService, TokenService>();
         services.AddScoped<IAnimeListService, AnimeListService>();
+        services.AddScoped<IStatsService, StatsService>();
 
         return services;
     }

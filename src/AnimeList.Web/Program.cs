@@ -19,5 +19,6 @@ builder.Services.AddScoped<AuthenticationStateProvider>(sp =>
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<AnimeListApiService>();
 builder.Services.AddScoped<ThemeService>();
+builder.Services.AddScoped<StatsApiService>();
 
 await builder.Build().RunAsync();
