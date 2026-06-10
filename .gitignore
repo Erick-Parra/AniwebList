@@ -12,6 +12,8 @@ obj/
 
 # User secrets
 appsettings.Development.json
+# El de la app Blazor WASM solo tiene la URL del API local (sin secretos)
+!src/AnimeList.Web/wwwroot/appsettings.Development.json
 
 # NuGet
 *.nupkg

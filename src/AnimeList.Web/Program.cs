@@ -9,8 +9,11 @@ var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
-var apiBase = builder.Configuration["ApiBaseUrl"] ?? "http://localhost:5294";
-builder.Services.AddScoped(_ => new HttpClient { BaseAddress = new Uri(apiBase + "/") });
+var apiBase = builder.Configuration["ApiBaseUrl"];
+var baseAddress = string.IsNullOrEmpty(apiBase)
+    ? builder.HostEnvironment.BaseAddress
+    : apiBase + "/";
+builder.Services.AddScoped(_ => new HttpClient { BaseAddress = new Uri(baseAddress) });
 
 builder.Services.AddAuthorizationCore();
 builder.Services.AddScoped<JwtAuthStateProvider>();

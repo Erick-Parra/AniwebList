@@ -3,10 +3,12 @@
   <ItemGroup>
     <ProjectReference Include="..\AnimeList.Core\AnimeList.Core.csproj" />
     <ProjectReference Include="..\AnimeList.Infrastructure\AnimeList.Infrastructure.csproj" />
+    <ProjectReference Include="..\AnimeList.Web\AnimeList.Web.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.8" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="10.0.9" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.8">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
